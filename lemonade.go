@@ -157,8 +157,6 @@ func New(AppID int32, config *LemonadeInstanceConfig) (*Lemonade, error) {
 					} else if instance.heartbeatStatus == HEARTBEAT_EXITED {
 						instance.heartbeatStatus = HEARTBEAT_NOTFOUND
 						instance.initialized = false
-
-						// fmt.Println("[Lemonade] NotITG not detected!")
 					} else if instance.heartbeatStatus == HEARTBEAT_FOUND {
 						instance.heartbeatStatus = HEARTBEAT_EXITED
 						instance.initialized = false
@@ -249,14 +247,14 @@ func New(AppID int32, config *LemonadeInstanceConfig) (*Lemonade, error) {
 	return lemonadeInstance, nil
 }
 func (l *Lemonade) Close() {
+	if l.channel == nil {
+		return
+	}
 
 	if l.OnExit != nil {
 		l.OnExit(l)
 	}
 
-	if l.channel == nil {
-		return
-	}
 	close(l.channel)
 	l.channel = nil
 }

@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	ENCODE_GUIDE string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 \n'\"~!@#$%^&*()<>/-=_+[]:;.,`{}"
+	ENCODE_GUIDE string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 \n'\"~!@#$%^&*()<>/-=_+[]:;.,`{}?|\\"
 )
 
 type LemonadeBuffer struct {

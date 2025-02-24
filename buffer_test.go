@@ -10,18 +10,18 @@ func TestBufferEncode(t *testing.T) {
 		t.Error(err)
 	}
 
-	expectedBuffer := []int{34,5,12,12,15,63,49,15,18,12,4} 
+	expectedBuffer := []int32{34,5,12,12,15,63,49,15,18,12,4} 
 
 	for idx, value := range(expectedBuffer) {
-		if buffer.Buffer[idx] != value {
-			t.Errorf("Expected (%d), got (%d)", value, buffer.Buffer[idx])
+		if buffer[idx] != value {
+			t.Errorf("Expected (%d), got (%d)", value, buffer[idx])
 		}
 	}
 }
 
 func TestBufferDecode(t * testing.T) {
 	buffer := &LemonadeBuffer{
-		Buffer: []int{34,5,12,12,15,63,49,15,18,12,4},
+		Buffer: []int32{34,5,12,12,15,63,49,15,18,12,4},
 	}
 
 	receivedString, err := buffer.DecodeToString()

@@ -1,5 +1,7 @@
 git.jaezmien.com/Jaezmien/notitg-external-go v0.3.0 h1:NY3i5t4sOElBFoikMc5vkzCwZFyBlE6GAlU71KCtRAA=
 git.jaezmien.com/Jaezmien/notitg-external-go v0.3.0/go.mod h1:ayyv80g8LAPREIjFNQEaR7naP94Why2Bs2+4VWDmPrg=
+git.jaezmien.com/Jaezmien/notitg-external-go v0.3.1 h1:bb0JZQ6N+Kz1yIbQXMwk3mMTyM+edHtJP6hTL8BEIbA=
+git.jaezmien.com/Jaezmien/notitg-external-go v0.3.1/go.mod h1:ayyv80g8LAPREIjFNQEaR7naP94Why2Bs2+4VWDmPrg=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/ebitengine/purego v0.8.2 h1:jPPGWs2sZ1UgOSgD2bClL0MJIqu58nOmIcBuXr62z1I=

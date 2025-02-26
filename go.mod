@@ -1,8 +1,8 @@
-module git.jaezmien.com/Jaezmien/notitg-lemonade-go
+module github.com/Jaezmien/notitg-lemonade-go
 
 go 1.24.0
 
-require git.jaezmien.com/Jaezmien/notitg-external-go v0.3.1
+require github.com/Jaezmien/notitg-external-go v0.3.2
 
 require (
 	github.com/ebitengine/purego v0.8.2 // indirect

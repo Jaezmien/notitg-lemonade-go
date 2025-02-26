@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"git.jaezmien.com/Jaezmien/notitg-external-go"
+	"github.com/Jaezmien/notitg-external-go"
 )
 
 const (

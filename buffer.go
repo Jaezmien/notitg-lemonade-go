@@ -4,10 +4,7 @@ import (
 	"errors"
 	"strings"
 	"sync"
-)
-
-const (
-	ENCODE_GUIDE string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 \n'\"~!@#$%^&*()<>/-=_+[]:;.,`{}?|\\"
+	"unicode"
 )
 
 type LemonadeBuffer struct {
@@ -54,8 +51,10 @@ const (
 
 func stringSatifiesEncoder(str string) bool {
 	for _, char := range(str) {
-		idx := strings.IndexRune(ENCODE_GUIDE, char)
-		if idx == -1 {
+		if char > unicode.MaxASCII {
+			return false
+		}
+		if char < 0 {
 			return false
 		}
 	}
@@ -71,8 +70,7 @@ func EncodeStringToBuffer(str string) ([]int32, error) {
 	buffer := make([]int32, len(str))
 
 	for idx, char := range(str) {
-		// NOTE: The +1 is because we're compensating for Lua indexing.
-		buffer[idx] = int32(strings.IndexRune(ENCODE_GUIDE, char) + 1)
+		buffer[idx] = int32(char)
 	}
 
 	return buffer, nil
@@ -85,8 +83,7 @@ func DecodeBufferToString(buffer []int32) (string, error) {
 	var sb strings.Builder
 
 	for _, idx := range(buffer) {
-		// NOTE: The -1 is because we're compensating for Lua indexing.
-		err := sb.WriteByte(ENCODE_GUIDE[idx-1])
+		err := sb.WriteByte(byte(idx))
 
 		if err != nil {
 			return "", err

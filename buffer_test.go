@@ -10,7 +10,7 @@ func TestBufferEncode(t *testing.T) {
 		t.Error(err)
 	}
 
-	expectedBuffer := []int32{34,5,12,12,15,63,49,15,18,12,4} 
+	expectedBuffer := []int32{72,101,108,108,111,32,87,111,114,108,100} 
 
 	for idx, value := range(expectedBuffer) {
 		if buffer[idx] != value {
@@ -21,7 +21,7 @@ func TestBufferEncode(t *testing.T) {
 
 func TestBufferDecode(t * testing.T) {
 	buffer := &LemonadeBuffer{
-		Buffer: []int32{34,5,12,12,15,63,49,15,18,12,4},
+		Buffer: []int32{72,101,108,108,111,32,87,111,114,108,100},
 	}
 
 	receivedString, err := buffer.DecodeToString()
@@ -36,7 +36,7 @@ func TestBufferDecode(t * testing.T) {
 }
 
 func TestInvalidEncode(t *testing.T) {
-	_, err := EncodeStringToBuffer("Hello	World")
+	_, err := EncodeStringToBuffer("Hello 💙 World")
 	if err == nil {
 		t.Errorf("Expected an error, got none.")
 	}

@@ -44,9 +44,8 @@ func (m *LemonadeBufferManager) Dequeue() *LemonadeBuffer {
 type LemonadeBufferSet uint
 
 const (
-	BUFFER_INDIVIDUAL LemonadeBufferSet = 0
-	BUFFER_SET_CHUNK  LemonadeBufferSet = 1
-	BUFFER_SET_END    LemonadeBufferSet = 2
+	BUFFER_PARTIAL LemonadeBufferSet = 0
+	BUFFER_END  LemonadeBufferSet = 1
 )
 
 func stringSatifiesEncoder(str string) bool {

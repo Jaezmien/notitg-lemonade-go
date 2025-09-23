@@ -13,15 +13,38 @@ const (
 	HEARTBEAT_EXITED uint = iota
 	HEARTBEAT_NOTFOUND
 	HEARTBEAT_FOUND
+)
 
-	READER_IDLE     int32 = 0
-	READER_RESERVED int32 = 1
-	READER_READY    int32 = 2
+const (
+	INCOMING_ID = 0
+	INCOMING_TYPE = 1
+	INCOMING_LENGTH = 2
+	INCOMING_DATA_START = 3
+	INCOMING_DATA_END = 29
+	INCOMING_STATE = 30
 
-	WRITER_IDLE      int32 = 0
-	WRITER_AVAILABLE int32 = 1
+	OUTGOING_ID = 31
+	OUTGOING_TYPE = 32
+	OUTGOING_LENGTH = 33
+	OUTGOING_DATA_START = 34
+	OUTGOING_DATA_END = 60
+	OUTGOING_STATE = 61
 
-	BUFFER_MAX_SIZE = 26
+	INIT_STATE = 63
+)
+
+const (
+	STATE_INCOMING_IDLE = 0
+	STATE_INCOMING_BUSY = 1
+	STATE_INCOMING_AVAILABLE = 2
+
+	STATE_OUTGOING_IDLE = 0
+	STATE_OUTGOING_AVAILABLE = 1
+)
+
+const (
+	INIT_EXPECTED_VALUE = 56
+	MAXIMUM_BUFFER_LENGTH = 29 - 3
 )
 
 type Lemonade struct {
@@ -64,26 +87,26 @@ func (l *Lemonade) WriteString(str string) error {
 	return l.WriteBuffer(buffer)
 }
 func (l *Lemonade) WriteBuffer(buffer []int32) error {
-	if len(buffer) <= BUFFER_MAX_SIZE {
+	if len(buffer) <= MAXIMUM_BUFFER_LENGTH {
 		l.writeManager.Queue(
 			&LemonadeBuffer{
 				Buffer: buffer,
-				Set:    BUFFER_INDIVIDUAL,
+				Set:    BUFFER_END,
 			},
 		)
 
 		return nil
 	}
 
-	ChunkSlice(buffer, BUFFER_MAX_SIZE, func(partialSlice []int32, isEnd bool) {
-		lemonBuffer := LemonadeBuffer{}
-
-		lemonBuffer.Buffer = partialSlice
+	ChunkSlice(buffer, MAXIMUM_BUFFER_LENGTH, func(partialSlice []int32, isEnd bool) {
+		lemonBuffer := LemonadeBuffer{
+			Buffer: partialSlice,
+		}
 
 		if isEnd {
-			lemonBuffer.Set = BUFFER_SET_END
+			lemonBuffer.Set = BUFFER_END
 		} else {
-			lemonBuffer.Set = BUFFER_SET_CHUNK
+			lemonBuffer.Set = BUFFER_PARTIAL
 		}
 
 		l.writeManager.Queue(&lemonBuffer)
@@ -175,7 +198,7 @@ func New(AppID int32, config *LemonadeInstanceConfig) (*Lemonade, error) {
 
 				// Check for Lemonade initialization
 				if !instance.initialized {
-					if instance.NotITG.GetExternal(60) == 0 {
+					if instance.NotITG.GetExternal(INIT_STATE) != INIT_EXPECTED_VALUE {
 						instance.Logger.Println("NotITG is currently initializing...")
 						break
 					}
@@ -189,48 +212,61 @@ func New(AppID int32, config *LemonadeInstanceConfig) (*Lemonade, error) {
 					lemonadeTicker.Reset(time.Millisecond * time.Duration(instance.MSTickRate))
 				}
 
-				if instance.NotITG.GetExternal(57) == WRITER_AVAILABLE && instance.NotITG.GetExternal(59) == instance.AppID {
-					bufferLength := int(instance.NotITG.GetExternal(54))
+				// Outgoing (Incoming from NotITG)
+				if instance.NotITG.GetExternal(OUTGOING_STATE) == STATE_OUTGOING_AVAILABLE &&
+					instance.NotITG.GetExternal(OUTGOING_ID) == instance.AppID {
+					bufferLength := int(instance.NotITG.GetExternal(OUTGOING_LENGTH))
 					buffer := make([]int32, bufferLength)
 
-					for idx := 0; idx < bufferLength; idx++ {
-						buffer[idx] = instance.NotITG.GetExternal(28 + idx)
-						instance.NotITG.SetExternal(28+idx, 0)
+					for idx := range bufferLength {
+						flagIdx := INCOMING_DATA_START + idx
+						buffer[idx] = instance.NotITG.GetExternal(flagIdx)
+						instance.NotITG.SetExternal(flagIdx, 0)
 					}
 
 					if instance.OnRead != nil {
 						instance.OnRead(instance, buffer)
 					}
 
-					bufferStatus := instance.NotITG.GetExternal(55)
-					if bufferStatus == int32(BUFFER_INDIVIDUAL) {
+					if instance.NotITG.GetExternal(OUTGOING_TYPE) == int32(BUFFER_END) {
+						if instance.readBuffers != nil && len(instance.readBuffers) > 0 {
+							buffer = append(instance.readBuffers, buffer...)
+						}
+						
 						if instance.OnBufferRead != nil {
 							instance.OnBufferRead(instance, buffer)
 						}
+
+						instance.readBuffers = nil
 					} else {
-						instance.readBuffers = append(instance.readBuffers, buffer...)
-						if bufferStatus == int32(BUFFER_SET_END) {
-							instance.OnBufferRead(instance, instance.readBuffers)
-							instance.readBuffers = nil
+						if instance.readBuffers == nil {
+							instance.readBuffers = make([]int32, 0)
+						} else {
+							instance.readBuffers = append(instance.readBuffers, buffer...)
 						}
 					}
 
-					instance.NotITG.SetExternal(54, 0)
-					instance.NotITG.SetExternal(55, 0)
-					instance.NotITG.SetExternal(59, 0)
-					instance.NotITG.SetExternal(57, 0)
+					instance.NotITG.SetExternal(OUTGOING_LENGTH, 0)
+					instance.NotITG.SetExternal(OUTGOING_STATE, 0)
+					instance.NotITG.SetExternal(OUTGOING_ID, 0)
+					instance.NotITG.SetExternal(OUTGOING_STATE, STATE_OUTGOING_IDLE)
 				}
-				if len(instance.writeManager.Buffers) > 0 && instance.NotITG.GetExternal(56) == READER_IDLE {
-					instance.NotITG.SetExternal(56, READER_RESERVED)
+
+				// (Incoming) Outgoing to NotITG
+				if len(instance.writeManager.Buffers) > 0 &&
+					instance.NotITG.GetExternal(INCOMING_STATE) == STATE_INCOMING_IDLE {
+					instance.NotITG.SetExternal(INCOMING_STATE, STATE_INCOMING_BUSY)
 					buffer := instance.writeManager.Dequeue()
 
 					for idx, value := range buffer.Buffer {
-						instance.NotITG.SetExternal(idx, value)
+						flagIdx := INCOMING_DATA_START + idx
+						instance.NotITG.SetExternal(flagIdx, value)
 					}
-					instance.NotITG.SetExternal(26, int32(len(buffer.Buffer)))
-					instance.NotITG.SetExternal(27, int32(buffer.Set))
-					instance.NotITG.SetExternal(58, instance.AppID)
-					instance.NotITG.SetExternal(56, READER_READY)
+					instance.NotITG.SetExternal(INCOMING_LENGTH, int32(len(buffer.Buffer)))
+
+					instance.NotITG.SetExternal(INCOMING_TYPE, int32(buffer.Set))
+					instance.NotITG.SetExternal(INCOMING_ID, instance.AppID)
+					instance.NotITG.SetExternal(INCOMING_STATE, STATE_INCOMING_AVAILABLE)
 
 					if instance.OnWrite != nil {
 						instance.OnWrite(instance, buffer.Buffer, buffer.Set)

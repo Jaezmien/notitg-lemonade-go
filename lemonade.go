@@ -219,7 +219,7 @@ func New(AppID int32, config *LemonadeInstanceConfig) (*Lemonade, error) {
 					buffer := make([]int32, bufferLength)
 
 					for idx := range bufferLength {
-						flagIdx := INCOMING_DATA_START + idx
+						flagIdx := OUTGOING_DATA_START + idx
 						buffer[idx] = instance.NotITG.GetExternal(flagIdx)
 						instance.NotITG.SetExternal(flagIdx, 0)
 					}

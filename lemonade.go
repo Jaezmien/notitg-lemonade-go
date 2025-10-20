@@ -241,9 +241,9 @@ func New(AppID int32, config *LemonadeInstanceConfig) (*Lemonade, error) {
 					} else {
 						if instance.readBuffers == nil {
 							instance.readBuffers = make([]int32, 0)
-						} else {
-							instance.readBuffers = append(instance.readBuffers, buffer...)
 						}
+
+						instance.readBuffers = append(instance.readBuffers, buffer...)
 					}
 
 					instance.NotITG.SetExternal(OUTGOING_LENGTH, 0)

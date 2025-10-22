@@ -224,11 +224,18 @@ func New(AppID int32, config *LemonadeInstanceConfig) (*Lemonade, error) {
 						instance.NotITG.SetExternal(flagIdx, 0)
 					}
 
+					isBufferEnd := instance.NotITG.GetExternal(OUTGOING_TYPE) == int32(BUFFER_END)
+
+					instance.NotITG.SetExternal(OUTGOING_LENGTH, 0)
+					instance.NotITG.SetExternal(OUTGOING_STATE, 0)
+					instance.NotITG.SetExternal(OUTGOING_ID, 0)
+					instance.NotITG.SetExternal(OUTGOING_STATE, STATE_OUTGOING_IDLE)
+
 					if instance.OnRead != nil {
 						instance.OnRead(instance, buffer)
 					}
 
-					if instance.NotITG.GetExternal(OUTGOING_TYPE) == int32(BUFFER_END) {
+					if isBufferEnd {
 						if len(instance.readBuffers) > 0 {
 							buffer = append(instance.readBuffers, buffer...)
 						}
@@ -245,11 +252,6 @@ func New(AppID int32, config *LemonadeInstanceConfig) (*Lemonade, error) {
 
 						instance.readBuffers = append(instance.readBuffers, buffer...)
 					}
-
-					instance.NotITG.SetExternal(OUTGOING_LENGTH, 0)
-					instance.NotITG.SetExternal(OUTGOING_STATE, 0)
-					instance.NotITG.SetExternal(OUTGOING_ID, 0)
-					instance.NotITG.SetExternal(OUTGOING_STATE, STATE_OUTGOING_IDLE)
 				}
 
 				// (Incoming) Outgoing to NotITG
